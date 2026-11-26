@@ -1,0 +1,39 @@
+name: Build PaulXStretch for Mac
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15-intel
+
+    steps:
+      - name: Download source code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Configure build
+        run: |
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+
+      - name: Compile application
+        run: |
+          cmake --build build \
+            --config Release \
+            --target PaulXStretch_Standalone \
+            --parallel 3
+
+      - name: Package application
+        run: |
+          APP=$(find build -name "PaulXStretch.app" -type d | head -n 1)
+          test -n "$APP"
+          ditto -c -k --keepParent "$APP" PaulXStretch-Mac.zip
+
+      - name: Upload application
+        uses: actions/upload-artifact@v4
+        with:
+          name: PaulXStretch-Mac
+          path: PaulXStretch-Mac.zip
